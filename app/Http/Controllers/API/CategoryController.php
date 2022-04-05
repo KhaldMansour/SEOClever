@@ -11,7 +11,7 @@ class CategoryController extends Controller
 
     public function __construct()
     {
-        $this->middleware('auth:admin', ['except'=> ['index', 'show']]);
+        $this->middleware('auth:admin', ['only'=> ['store']]);
     }
 
     /**
@@ -21,7 +21,7 @@ class CategoryController extends Controller
      */
     public function index()
     {
-        //
+        return Category::all();
     }
 
     /**
@@ -57,20 +57,14 @@ class CategoryController extends Controller
      * @param  \App\Models\Category  $category
      * @return \Illuminate\Http\Response
      */
-    public function show(Category $category)
+    public function show($id)
     {
-        //
+        return Category::with('services')->findOrFail($id);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\Category  $category
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(Category $category)
+    public function categoryServices()
     {
-        //
+        return Category::with('services')->get();
     }
 
     /**

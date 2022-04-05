@@ -35,6 +35,11 @@ class UserController extends Controller
         return $this->login($user);
     }
 
+    public function myProfile()
+    {
+       return auth('user')->user();
+    }
+
     protected function respondWithToken($token)
     {
         return response()->json([

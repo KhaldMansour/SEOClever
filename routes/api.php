@@ -16,49 +16,74 @@ use Illuminate\Support\Facades\Route;
 
 Route::group(['namespace' => 'App\Http\Controllers\API'], function ($router) {
 
-    Route::group(['prefix' => 'user'] , function ($router) {
+    Route::group(['prefix' => 'users'] , function ($router) {
         
         Route::post('login', 'UserController@login');
 
         Route::post('register', 'UserController@register');
 
-        Route::get('my-cart', 'CartController@show');
-
-        Route::post('cart/add/{id}', 'CartController@addToCart');
-
-        Route::delete('cart/remove/{id}', 'CartController@removeCartItem');
+        Route::get('profile', 'UserController@myProfile');
     });
 
-    Route::group(['prefix' => 'order'] , function ($router) {
-        
-        Route::post('place-order', 'OrderController@store');
+    Route::group(['middleware' => 'auth:user'] , function ($router) {
 
-        Route::post('register', 'UserController@register');
+        Route::group(['prefix' => 'orders'] , function ($router) {
 
-        Route::get('my-cart', 'CartController@show');
+            Route::get('', 'OrderController@index');
 
-        Route::post('cart/add/{id}', 'CartController@addToCart');
+            Route::post('', 'OrderController@store');
+        });
+    
+        Route::group(['prefix' => 'recharges'] , function ($router) {
 
-        Route::delete('cart/remove/{id}', 'CartController@removeCartItem');
+            Route::get('{id}', 'RechargeController@show');
+    
+            Route::post('', 'RechargeController@store');
+        });
+    
+        Route::group(['prefix' => 'likes'] , function ($router) {
+
+            Route::get('', 'LikeController@index');
+    
+            Route::post('like/{id}', 'LikeController@store');
+    
+            Route::post('unlike/{id}', 'LikeController@destroy');
+        }); 
     });
 
-    Route::group(['prefix' => 'admin'] , function ($router) {
+    Route::group(['prefix' => 'categories'] , function ($router) {
+    
+        Route::get('' , 'CategoryController@index');
+
+        Route::get('/services' , 'CategoryController@categoryServices');
+
+        Route::get('{id}' , 'CategoryController@show');
+    });
+
+    Route::group(['prefix' => 'services'] , function ($router) {
+    
+        Route::get('' , 'CategoryController@index');
+
+        Route::get('/services' , 'CategoryController@categoryServices');
+
+        Route::get('{id}' , 'ServiceController@show');
+
+    });
+
+    Route::group(['prefix' => 'admins'] , function ($router) {
         
         Route::post('login', 'AdminController@login');
 
         Route::post('register', 'AdminController@register');
 
-        // Route::get('requested-guardians', 'UserController@getRequestedGuardians');
+        Route::get('profile', 'AdminController@myProfile');
 
-        // Route::post('accept-guardians/{id}', 'UserController@acceptdGuardian');
-
-        Route::group(['prefix' => 'category'] , function ($router) {
+        Route::group(['prefix' => 'categories'] , function ($router) {
 
             Route::post('' , 'CategoryController@store');
 
-            Route::post('{id}/service' , 'ServiceController@store');
+            Route::post('{id}/services' , 'ServiceController@store');
         });
-
 
     });
 });

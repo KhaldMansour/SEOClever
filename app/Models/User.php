@@ -64,13 +64,24 @@ class User extends Authenticatable implements JWTSubject
         $this->attributes['password'] = bcrypt($value);
     }
 
-    public function cart()
+    public function recharges()
     {
-        return $this->hasOne(Cart::class);
+        return $this->hasMany(Recharge::class);
+    }
+
+    public function logs()
+    {
+        return $this->hasMany(Log::class);
     }
 
     public function orders()
     {
-        return $this->hasMany(Cart::class);
+        return $this->hasMany(Order::class);
+    }
+
+    public function likes()
+    {
+        return $this->belongsToMany(Service::class , 'likes')
+            ->withTimestamps();
     }
 }

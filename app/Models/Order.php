@@ -16,8 +16,13 @@ class Order extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function order_items()
+    public function service()
     {
-        return $this->hasMany(OrderItem::class);
+        return $this->belongsTo(Service::class);
+    }
+
+    public function log()
+    {
+        return $this->morphOne(Log::class, 'loggable');
     }
 }

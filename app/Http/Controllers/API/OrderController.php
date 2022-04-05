@@ -3,24 +3,17 @@
 namespace App\Http\Controllers\API;
 
 use App\Models\Order;
+use App\Models\Service;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use App\Http\Repositories\CartRepository;
-use App\Http\Repositories\OrderRepository;
 
 class OrderController extends Controller
 {
-    public $cartRepository;
-
     public $orderRepository;
 
-    public function __construct(CartRepository $cartRepository , OrderRepository $orderRepository)
+    public function __construct()
     {
         $this->middleware('auth:user');
-
-        $this->cartRepository = $cartRepository;
-
-        $this->orderRepository = $orderRepository;
     }
 
     /**
@@ -30,7 +23,9 @@ class OrderController extends Controller
      */
     public function index()
     {
-        //
+        $user = auth('user')->user();
+
+        return $user->orders;
     }
 
     /**
@@ -52,24 +47,37 @@ class OrderController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'first_name' => 'required|string',
-            'last_name' => 'required|string',
-            'phone' => 'required|regex:/(01)[0-9]/',
-            'city' => 'required|string',
-            'address' => 'required|string',
-            'country' => 'required|string',
+            'service_id' => 'required|numeric',
+            'quantity' =>'required|numeric',
+            'url' =>'required|url'
         ]);
 
-        $cart_items_count = $this->cartRepository->getCart()->withCount('cart_items')->first()->cart_items_count;
+        $service = Service::findOrFail($data['service_id']);
 
-        if ($cart_items_count <= 0)
+        $user = auth('user')->user();
+
+        $amount = $data['quantity'] * $service['rate'];
+
+        if ($user->balance < $amount)
         {
-            return response()->json([
-                'message' => "Your cart is empty",
-            ] , 400);
+            return response()->json(['message' => "You don't have enough balance , Pleace recharge"], 400);
         }
 
-        return $this->orderRepository->placeOrder($data);
+        $data = array_merge($data ,[
+            'total' => $amount,
+            'user_id' => $user->id,
+            'rate' => $service->rate
+        ]);
+
+        $order = Order::create($data);
+
+        $this->addToLogs($order);
+
+        $this->calculateBalance();
+
+        return response()->json([
+            'message' => "Order added successfully"
+        ]);
     }
 
     /**
@@ -115,5 +123,31 @@ class OrderController extends Controller
     public function destroy(Order $order)
     {
         //
+    }
+
+    public function calculateBalance()
+    {
+        $user = auth()->user();
+
+        $user_balance = $user->recharges->sum('amount') - $user->orders->sum('total');
+
+        $user->balance = $user_balance;
+
+        $user->save();
+    }
+
+    public function addToLogs($order)
+    {
+        $user = auth('user')->user();
+
+        $log = $order->toArray();
+        
+        $log = array_merge($log ,[
+            'amount' => $order->total,
+        ]);
+
+        $log = $order->log()->create($log);
+
+        $user->logs()->save($log);
     }
 }

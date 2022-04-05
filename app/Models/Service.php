@@ -16,8 +16,14 @@ class Service extends Model
         return $this->belongsTo(Category::class);
     }
 
-    public function cart_items()
+    public function orders()
     {
-        return $this->hasMany(CartItem::class);
+        return $this->hasMany(Order::class);
+    }
+
+    public function likes()
+    {
+        return $this->belongsToMany(User::class , 'likes')
+            ->withTimestamps();
     }
 }

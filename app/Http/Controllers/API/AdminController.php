@@ -33,6 +33,11 @@ class AdminController extends Controller
         return $this->login($admin);
     }
 
+    public function myProfile()
+    {
+       return auth('admin')->user();
+    }
+
     protected function respondWithToken($token)
     {
         return response()->json([
