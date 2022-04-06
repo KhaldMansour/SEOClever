@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Models\Service;
+use App\Models\ServiceInfo;
 use App\Models\Category;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
@@ -51,11 +52,20 @@ class ServiceController extends Controller
             'max' => 'required|numeric',
             'rate' => 'required|numeric',
             'refill' => 'required|boolean',
+            'start_date' => 'required|string',
+            'approximate_time' => 'required|string',
+            'speed' => 'required|string',
+            'quality' => 'required|string',
+            'rating' => 'required|numeric',
+            'guarantee' => 'required|string',
+            'description' => 'sometimes|string',
         ]);
 
         $service = new Service($data);
 
         $category->services()->save($service);
+
+        $service_info = $service->service_infos()->create($data);
 
         return $service;
     }
@@ -68,7 +78,7 @@ class ServiceController extends Controller
      */
     public function show($id)
     {
-        return Service::findOrFail($id);
+        return Service::with('service_infos')->findOrFail($id);
     }
 
     /**

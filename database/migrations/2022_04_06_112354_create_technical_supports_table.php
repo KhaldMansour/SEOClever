@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateOrdersTable extends Migration
+class CreateTechnicalSupportsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,18 +13,14 @@ class CreateOrdersTable extends Migration
      */
     public function up()
     {
-        Schema::create('orders', function (Blueprint $table) {
+        Schema::create('technical_supports', function (Blueprint $table) {
             $table->id();
-            $table->integer('quantity');
-            $table->decimal('rate');
-            $table->decimal('total')->default(0);
-            $table->string('url');
+            $table->string('topic');
+            $table->string('title');
+            $table->integer('order_id');
+            $table->text('message');
             $table->string('status')->default('pending');
-            $table->integer('service_id')->unsigned()
-                ->references('id')
-                ->on('services')
-                ->onDelete('cascade');
-            $table->integer('user_id')->unsigned()
+            $table->integer('user_id')
                 ->references('id')
                 ->on('users')
                 ->onDelete('cascade');
@@ -39,6 +35,6 @@ class CreateOrdersTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('orders');
+        Schema::dropIfExists('technical_supports');
     }
 }

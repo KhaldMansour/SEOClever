@@ -86,9 +86,56 @@ class OrderController extends Controller
      * @param  \App\Models\Order  $order
      * @return \Illuminate\Http\Response
      */
-    public function show(Order $order)
+    public function massOrder(Request $request)
     {
-        //
+        $user = auth('user')->user();
+
+        // $orders =  $request->orders;
+
+        $orders = preg_split("/\r\n|\n|\r/", $request->orders);
+
+        $total = 0;
+
+        $order_items = [];
+
+        for ($i = 0; $i < count($orders); $i++) 
+        {
+            $orders[$i] = explode('|', $orders[$i]);
+
+            $service = Service::findOrFail($orders[$i][0]);
+
+            $url = $orders[$i][1];
+
+            $quantity = $orders[$i][2];
+
+            $validation = "/^(http|https|ftp):\/\/([A-Z0-9][A-Z0-9_-]*(?:\.[A-Z0-9][A-Z0-9_-]*)+):?(\d+)?\/?/i";
+
+            $valid_url =preg_match($validation, $url);
+
+            $valid_quantity = is_numeric($quantity);
+
+            if(!$service && $valid_url && $valid_quantity)
+            {
+                return response()->json(['message' => "You have an error in line" . $i+1], 400); 
+            }
+
+            $total += ($service->rate * $quantity);
+
+            $order_item = [$service , $quantity , $url]; 
+
+            array_push($order_items , $order_item);
+        }
+
+        foreach ($order_items as $order_item)
+        {
+            $this->createOrder($order_item);
+        }
+
+        $this->calculateBalance();
+
+        return response()->json([
+            'message' => "Orders added successfully"
+        ]);
     }
 
     /**
@@ -97,9 +144,24 @@ class OrderController extends Controller
      * @param  \App\Models\Order  $order
      * @return \Illuminate\Http\Response
      */
-    public function edit(Order $order)
+    public function createOrder($order_item)
     {
-        //
+        $user = auth('user')->user();
+
+        $amount = $order_item[0]['rate'] * $order_item[1];
+
+        $data = [
+            'service_id' => $order_item[0]['id'],
+            'quantity' => $order_item[1],
+            'total' => $amount,
+            'user_id' => $user->id,
+            'rate' => $order_item[0]['rate'],
+            'url' => $order_item[2]
+        ];
+
+        $order = Order::create($data);
+
+        $this->addToLogs($order);
     }
 
     /**
@@ -133,7 +195,40 @@ class OrderController extends Controller
 
         $user->balance = $user_balance;
 
+        $user = $this->calculateLevel($user);
+
         $user->save();
+    }
+
+    public function calculateLevel($user)
+    {
+        $total = $user->orders->sum('total');
+
+        if( $total >= 0 && $total <= 100 )
+        {
+            $user->level = 'new';
+        }
+        elseif( $total > 100 && $total <= 1000 )
+        {
+            $user->level = 'beginner';
+        }
+        elseif( $total > 1000 && $total <= 2500 )
+        {
+            $user->level = 'active';
+        }
+        elseif( $total > 2500 && $total <= 10000 )
+        {
+            $user->level = 'special';
+        }
+        elseif( $total > 10000 && $total <= 25000 )
+        {
+            $user->level = 'vip';
+        }
+        else{
+            $user->level = 'royal';
+        }
+
+        return $user;
     }
 
     public function addToLogs($order)

@@ -32,6 +32,8 @@ Route::group(['namespace' => 'App\Http\Controllers\API'], function ($router) {
             Route::get('', 'OrderController@index');
 
             Route::post('', 'OrderController@store');
+
+            Route::post('mass-order', 'OrderController@massOrder');
         });
     
         Route::group(['prefix' => 'recharges'] , function ($router) {
@@ -48,6 +50,12 @@ Route::group(['namespace' => 'App\Http\Controllers\API'], function ($router) {
             Route::post('like/{id}', 'LikeController@store');
     
             Route::post('unlike/{id}', 'LikeController@destroy');
+        }); 
+
+        Route::group(['prefix' => 'technical-supports'] , function ($router) {
+            Route::get('my-technical-support', 'TechnicalSupportController@show');
+
+            Route::post('', 'TechnicalSupportController@store');
         }); 
     });
 

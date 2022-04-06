@@ -9,7 +9,7 @@ class Service extends Model
 {
     use HasFactory;
 
-    protected $guarded = [];
+    protected $fillable = ['name' , 'min' , 'max' , 'rate' , 'refill'];
 
     public function category()
     {
@@ -25,5 +25,10 @@ class Service extends Model
     {
         return $this->belongsToMany(User::class , 'likes')
             ->withTimestamps();
+    }
+
+    public function service_infos()
+    {
+        return $this->hasOne(ServiceInfo::class);
     }
 }

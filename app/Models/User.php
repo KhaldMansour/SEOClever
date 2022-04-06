@@ -84,4 +84,9 @@ class User extends Authenticatable implements JWTSubject
         return $this->belongsToMany(Service::class , 'likes')
             ->withTimestamps();
     }
+
+    public function technical_supports()
+    {
+        return $this->hasMany(TechnicalSupport::class);
+    }
 }
